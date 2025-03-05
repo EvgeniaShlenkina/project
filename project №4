@@ -1,0 +1,172 @@
+import customtkinter as ctk
+from PIL import Image
+
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("green")
+
+root = ctk.CTk()
+root.title("соедини 4")
+root.geometry("800x800")
+my_font = ctk.CTkFont(family="Roboto", size=30)
+
+
+def move(x, y, flag):
+    global flag_player, matrix_labels
+    if flag == "white":
+        widget_unactive_textbox.configure(state="normal")
+        widget_unactive_textbox.delete(0.0, "end")
+        widget_unactive_textbox.insert(0.0, "фишку можно\nстaвить только в\nсерую ячейку\n(самую нижнюю из свободных в\nстолбце)")
+        widget_unactive_textbox.configure(state="disabled")
+    if flag == "cross" or flag == "circle":
+        widget_unactive_textbox.configure(state="normal")
+        widget_unactive_textbox.delete(0.0, "end")
+        widget_unactive_textbox.insert(0.0,"здесь уже стоит\nфишка, ход можно\nсделать только в\nсвободную ячейку")
+        widget_unactive_textbox.configure(state="disabled")
+    if flag == "grey":
+         if flag_player == 1:
+             matrix_labels[x][y].configure(image=image_Cross_ctk_utility)
+             flag_player = 2
+             # widget_radiobutton_1.configure(state="disabled")
+             # widget_radiobutton_2.configure(state="normal")
+             var_radiobuttons.set(2)
+             matrix_flag[x][y] = "cross"
+             if x != 0:
+                 matrix_labels[x - 1][y].configure(text="", image=image_GreyBackground_ctk_utility)
+                 matrix_flag[x - 1][y] = "grey"
+         elif flag_player == 2:
+             matrix_labels[x][y].configure(image=image_Circle_ctk_utility)
+             flag_player = 1
+             # widget_radiobutton_1.configure(state="normal")
+             # widget_radiobutton_2.configure(state="disabled")
+             var_radiobuttons.set(1)
+             matrix_flag[x][y] = "circle"
+             if x != 0:
+                 matrix_labels[x - 1][y].configure(text="", image=image_GreyBackground_ctk_utility)
+                 matrix_flag[x - 1][y] = "grey"
+         widget_unactive_textbox.configure(state="normal")
+         widget_unactive_textbox.delete(0.0, "end")
+         widget_unactive_textbox.insert(0.0,"x")
+         widget_unactive_textbox.configure(state="disabled")
+
+
+
+widget_label = ctk.CTkLabel(master=root)
+widget_label.configure(text="ходит игрок:", font=my_font, )
+
+var_radiobuttons = ctk.IntVar()
+widget_radiobutton_1 = ctk.CTkRadioButton(master=root, variable=var_radiobuttons, value=1)
+widget_radiobutton_1.configure(text="№1", font=my_font, hover="disabled", fg_color="green", state = "disabled")
+widget_radiobutton_2 = ctk.CTkRadioButton(master=root, variable=var_radiobuttons, value=2)
+widget_radiobutton_2.configure(text="№2", font=my_font, hover="disabled", state = "disabled", fg_color="red")
+var_radiobuttons.set(1)
+
+widget_unactive_textbox = ctk.CTkTextbox(master=root)
+widget_unactive_textbox.configure(font=my_font, width=310, height=140)
+widget_unactive_textbox.insert(0.0, "правила:\nпобедитель:")
+widget_unactive_textbox.configure(state="disabled")
+
+frame = ctk.CTkFrame(master=root)
+
+image_Circle_object = Image.open("images/Circle.png")
+image_Circle_ctk_utility = ctk.CTkImage(dark_image=image_Circle_object, size=(90, 90))
+image_Cross_object = Image.open("images/Cross.png")
+image_Cross_ctk_utility = ctk.CTkImage(dark_image=image_Cross_object, size=(90, 90))
+image_GreyBackground_object = Image.open("images/GreyBackground.png")
+image_GreyBackground_ctk_utility = ctk.CTkImage(dark_image=image_GreyBackground_object, size=(90, 90))
+image_WhiteBackground_object = Image.open("images/WhiteBackground.png")
+image_WhiteBackground_ctk_utility = ctk.CTkImage(dark_image=image_WhiteBackground_object, size=(90, 90))
+
+rows, columns = 3, 3
+for i in range(rows):
+    root.rowconfigure(index=i, weight=1)
+for i in range(columns):
+    root.columnconfigure(index=i, weight=1)
+widget_label.grid(row=0, column=0, columnspan=2, padx=(0,35), pady=(35,0))
+widget_radiobutton_1.grid(row=1, column=0, padx=(50, 0), pady=(0, 20))
+widget_radiobutton_2.grid(row=1, column=1, pady=(0, 20))
+widget_unactive_textbox.grid(row=0, column=2, rowspan=2, padx=(0, 45), pady=(20))
+frame.grid(row=2, column=0, columnspan=3)
+
+flag_player = 1
+
+rows, columns = 6, 7
+for i in range(rows):
+    frame.rowconfigure(index=i, weight=1)
+for j in range(columns):
+    frame.columnconfigure(index=j, weight=1)
+
+matrix_labels = []
+for i in range(6):
+    matrix_labels.append([0] * 7)
+
+for i in range(6):
+    for j in range(7):
+        matrix_labels[i][j] = ctk.CTkLabel(master=frame)
+        matrix_labels[i][j].configure(text="", image=image_WhiteBackground_ctk_utility)
+        if i == 5:
+            matrix_labels[i][j].configure(text="", image=image_GreyBackground_ctk_utility)
+        matrix_labels[i][j].grid(row=i, column=j, padx=1, pady=1)
+
+matrix_flag = []
+for i in range(6):
+    matrix_flag.append([0] * 7)
+
+for i in range(6):
+    for j in range (7):
+        matrix_flag[i][j] = "white"
+        if i == 5:
+            matrix_flag[i][j] = "grey"
+
+matrix_f = []
+for i in range(6):
+    matrix_f.append([0] * 7)
+
+matrix_f[0][0] = lambda x: move(0, 0, matrix_flag[0][0])
+matrix_f[0][1] = lambda x: move(0, 1, matrix_flag[0][1])
+matrix_f[0][2] = lambda x: move(0, 2, matrix_flag[0][2])
+matrix_f[0][3] = lambda x: move(0, 3, matrix_flag[0][3])
+matrix_f[0][4] = lambda x: move(0, 4, matrix_flag[0][4])
+matrix_f[0][5] = lambda x: move(0, 5, matrix_flag[0][5])
+matrix_f[0][6] = lambda x: move(0, 6, matrix_flag[1][6])
+matrix_f[1][0] = lambda x: move(1, 0, matrix_flag[1][0])
+matrix_f[1][1] = lambda x: move(1, 1, matrix_flag[1][1])
+matrix_f[1][2] = lambda x: move(1, 2, matrix_flag[1][2])
+matrix_f[1][3] = lambda x: move(1, 3, matrix_flag[1][3])
+matrix_f[1][4] = lambda x: move(1, 4, matrix_flag[1][4])
+matrix_f[1][5] = lambda x: move(1, 5, matrix_flag[1][5])
+matrix_f[1][6] = lambda x: move(1, 6, matrix_flag[1][6])
+matrix_f[2][0] = lambda x: move(2, 0, matrix_flag[2][0])
+matrix_f[2][1] = lambda x: move(2, 1, matrix_flag[2][1])
+matrix_f[2][2] = lambda x: move(2, 2, matrix_flag[2][2])
+matrix_f[2][3] = lambda x: move(2, 3, matrix_flag[2][3])
+matrix_f[2][4] = lambda x: move(2, 4, matrix_flag[2][4])
+matrix_f[2][5] = lambda x: move(2, 5, matrix_flag[2][5])
+matrix_f[2][6] = lambda x: move(2, 6, matrix_flag[2][6])
+matrix_f[3][0] = lambda x: move(3, 0, matrix_flag[3][0])
+matrix_f[3][1] = lambda x: move(3, 1, matrix_flag[3][1])
+matrix_f[3][2] = lambda x: move(3, 2, matrix_flag[3][2])
+matrix_f[3][3] = lambda x: move(3, 3, matrix_flag[3][3])
+matrix_f[3][4] = lambda x: move(3, 4, matrix_flag[3][4])
+matrix_f[3][5] = lambda x: move(3, 5, matrix_flag[3][5])
+matrix_f[3][6] = lambda x: move(3, 6, matrix_flag[3][6])
+matrix_f[4][0] = lambda x: move(4, 0, matrix_flag[4][0])
+matrix_f[4][1] = lambda x: move(4, 1, matrix_flag[4][1])
+matrix_f[4][2] = lambda x: move(4, 2, matrix_flag[4][2])
+matrix_f[4][3] = lambda x: move(4, 3, matrix_flag[4][3])
+matrix_f[4][4] = lambda x: move(4, 4, matrix_flag[4][4])
+matrix_f[4][5] = lambda x: move(4, 5, matrix_flag[4][5])
+matrix_f[4][6] = lambda x: move(4, 6, matrix_flag[4][6])
+matrix_f[5][0] = lambda x: move(5, 0, matrix_flag[5][0])
+matrix_f[5][1] = lambda x: move(5, 1, matrix_flag[5][1])
+matrix_f[5][2] = lambda x: move(5, 2, matrix_flag[5][2])
+matrix_f[5][3] = lambda x: move(5, 3, matrix_flag[5][3])
+matrix_f[5][4] = lambda x: move(5, 4, matrix_flag[5][4])
+matrix_f[5][5] = lambda x: move(5, 5, matrix_flag[5][5])
+matrix_f[5][6] = lambda x: move(5, 6, matrix_flag[5][6])
+
+
+for i in range(6):
+    for j in range(7):
+        matrix_labels[i][j].bind("<Button-1>", matrix_f[i][j])
+
+root.mainloop()
