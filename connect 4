@@ -1,0 +1,200 @@
+import customtkinter as ctk
+from PIL import Image
+
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("green")
+
+root = ctk.CTk()
+root.title("соедини 4")
+root.geometry("800x800")
+my_font = ctk.CTkFont(family="Roboto", size=30)
+
+
+def move(x, y, flag):
+    global flag_player, matrix_labels, flag_victory
+    if flag_victory == 1:
+        for i in range(6):
+            for j in range(7):
+                matrix_labels[i][j].configure(image=image_WhiteBackground_ctk_utility)
+                matrix_flag[i][j] = "white"
+                if i == 5:
+                    matrix_labels[i][j].configure(image=image_GreyBackground_ctk_utility)
+                    matrix_flag[i][j] = "grey"
+        flag_victory = 0
+        return
+    if flag == "white":
+        widget_unactive_textbox.configure(state="normal")
+        widget_unactive_textbox.delete(0.0, "end")
+        widget_unactive_textbox.insert(0.0, "фишку можно\nстaвить только в\nсерую ячейку\n(самую нижнюю из свободных в\nстолбце)")
+        widget_unactive_textbox.configure(state="disabled")
+    if flag == "cross" or flag == "circle":
+        widget_unactive_textbox.configure(state="normal")
+        widget_unactive_textbox.delete(0.0, "end")
+        widget_unactive_textbox.insert(0.0,"здесь уже стоит\nфишка, ход можно\nсделать только в\nсвободную ячейку")
+        widget_unactive_textbox.configure(state="disabled")
+    if flag == "grey":
+         if flag_player == 1:
+             matrix_labels[x][y].configure(image=image_Cross_ctk_utility)
+             flag_player = 2
+             var_radiobuttons.set(2)
+             matrix_flag[x][y] = "cross"
+             if x != 0:
+                 matrix_labels[x - 1][y].configure(text="", image=image_GreyBackground_ctk_utility)
+                 matrix_flag[x - 1][y] = "grey"
+         elif flag_player == 2:
+             matrix_labels[x][y].configure(image=image_Circle_ctk_utility)
+             flag_player = 1
+             var_radiobuttons.set(1)
+             matrix_flag[x][y] = "circle"
+             if x != 0:
+                 matrix_labels[x - 1][y].configure(text="", image=image_GreyBackground_ctk_utility)
+                 matrix_flag[x - 1][y] = "grey"
+         widget_unactive_textbox.configure(state="normal")
+         widget_unactive_textbox.delete(0.0, "end")
+         widget_unactive_textbox.insert(0.0,"ПРАВИЛА:\nНужно собрать 4\nфишки одного\nцвета в ряд:\nпо горизонтали,\nвертикали, или\nпо диагонали. За\nодин ход можно\nкинуть только одну\nфишку. Игра\nрасчитана на 2их\nигроков, делающих\nходы по очереди.\nОсобенностью этой\nигры заключается\nв том что ход\nможно сделать\nтолько в самую\nнижнюю,\nсвободную ячейку.")
+         widget_unactive_textbox.configure(state="disabled")
+    victory_check()
+    filled_field()
+
+
+def filled_field():
+    global matrix_flag, matrix_labels
+    s = 0
+    for i in range(6):
+        for j in range(7):
+            if matrix_flag[i][j] == "circle" or matrix_flag[i][j] == "cross":
+                s+=1
+    if s == 42:
+        for i in range(6):
+            for j in range(7):
+                matrix_labels[i][j].configure(image=image_WhiteBackground_ctk_utility)
+                matrix_flag[i][j] = "white"
+                if i == 5:
+                    matrix_labels[i][j].configure(image=image_GreyBackground_ctk_utility)
+                    matrix_flag[i][j] = "grey"
+
+        widget_unactive_textbox.configure(state="normal")
+        widget_unactive_textbox.delete(0.0, "end")
+        widget_unactive_textbox.insert(0.0,"Поле было\nполностью\nзаполнено, игра\nначинается\nзаново")
+        widget_unactive_textbox.configure(state="disabled")
+        s = 0
+
+
+def victory_check():
+    global matrix_flag
+
+    for i in range(6):
+        for j in range(7):
+            if j <= 3 and matrix_flag[i][j] == matrix_flag[i][j+1] == matrix_flag[i][j+2] == matrix_flag[i][j+3] == "circle":
+                victory(1)
+            if i <= 2 and matrix_flag[i][j] == matrix_flag[i + 1][j] == matrix_flag[i + 2][j] == matrix_flag[i + 3][j] == "circle":
+                victory(1)
+            if j <= 3 and matrix_flag[i][j] == matrix_flag[i][j+1] == matrix_flag[i][j+2] == matrix_flag[i][j+3] == "cross":
+                victory(2)
+            if i <= 2 and matrix_flag[i][j] == matrix_flag[i + 1][j] == matrix_flag[i + 2][j] == matrix_flag[i + 3][j] == "cross":
+                victory(2)
+            if i <= 2 and j <= 3 and matrix_flag[i][j] == matrix_flag[i + 1][j + 1] == matrix_flag[i + 2][j + 2] == matrix_flag[i + 3][j + 3] == "circle":
+                victory(2)
+            if i <= 2 and j <= 3 and matrix_flag[i][j] == matrix_flag[i + 1][j + 1] == matrix_flag[i + 2][j + 2] == matrix_flag[i + 3][j + 3] == "cross":
+                victory(1)
+            if i >= 3 and j <= 3 and matrix_flag[i][j] == matrix_flag[i - 1][j + 1] == matrix_flag[i - 2][j + 2] == matrix_flag[i - 3][j + 3] == "circle":
+                victory(2)
+            if i >= 3 and j <= 3 and matrix_flag[i][j] == matrix_flag[i - 1][j + 1] == matrix_flag[i - 2][j + 2] == matrix_flag[i - 3][j + 3] == "cross":
+                victory(1)
+
+def victory(x):
+    global flag_victory
+    if x == 2:
+        x = 1
+    elif x == 1:
+        x =2
+    widget_unactive_textbox.configure(state="normal")
+    widget_unactive_textbox.delete(0.0, "end")
+    widget_unactive_textbox.insert(0.0, f"Игрок №{x}\nодержал победу!!")
+    widget_unactive_textbox.configure(state="disabled")
+    flag_victory = 1
+
+flag_victory = 0
+
+widget_label = ctk.CTkLabel(master=root)
+widget_label.configure(text="ходит игрок:", font=my_font, )
+
+var_radiobuttons = ctk.IntVar()
+widget_radiobutton_1 = ctk.CTkRadioButton(master=root, variable=var_radiobuttons, value=1)
+widget_radiobutton_1.configure(text="№1", font=my_font, hover="disabled", fg_color="green", state = "disabled", text_color_disabled = "#FFFFFF")
+widget_radiobutton_2 = ctk.CTkRadioButton(master=root, variable=var_radiobuttons, value=2)
+widget_radiobutton_2.configure(text="№2", font=my_font, hover="disabled", fg_color="red", state = "disabled", text_color_disabled = "#FFFFFF")
+var_radiobuttons.set(1)
+
+widget_unactive_textbox = ctk.CTkTextbox(master=root)
+widget_unactive_textbox.configure(font=my_font, width=310, height=140)
+widget_unactive_textbox.insert(0.0, "ПРАВИЛА:\nНужно собрать 4\nфишки одного\nцвета в ряд:\nпо горизонтали,\nвертикали, или\nпо диагонали. За\nодин ход можно\nкинуть только одну\nфишку. Игра\nрасчитана на 2их\nигроков, делающих\nходы по очереди.\nОсобенностью этой\nигры заключается\nв том что ход\nможно сделать\nтолько в самую\nнижнюю,\nсвободную ячейку.")
+widget_unactive_textbox.configure(state="disabled")
+
+frame = ctk.CTkFrame(master=root)
+
+image_Circle_object = Image.open("images/Circle.png")
+image_Circle_ctk_utility = ctk.CTkImage(dark_image=image_Circle_object, size=(90, 90))
+image_Cross_object = Image.open("images/Cross.png")
+image_Cross_ctk_utility = ctk.CTkImage(dark_image=image_Cross_object, size=(90, 90))
+image_GreyBackground_object = Image.open("images/GreyBackground.png")
+image_GreyBackground_ctk_utility = ctk.CTkImage(dark_image=image_GreyBackground_object, size=(90, 90))
+image_WhiteBackground_object = Image.open("images/WhiteBackground.png")
+image_WhiteBackground_ctk_utility = ctk.CTkImage(dark_image=image_WhiteBackground_object, size=(90, 90))
+
+rows, columns = 3, 3
+for i in range(rows):
+    root.rowconfigure(index=i, weight=1)
+for i in range(columns):
+    root.columnconfigure(index=i, weight=1)
+widget_label.grid(row=0, column=0, columnspan=2, padx=(0,35), pady=(35,0))
+widget_radiobutton_1.grid(row=1, column=0, padx=(50, 0), pady=(0, 20))
+widget_radiobutton_2.grid(row=1, column=1, pady=(0, 20))
+widget_unactive_textbox.grid(row=0, column=2, rowspan=2, padx=(0, 45), pady=(20))
+frame.grid(row=2, column=0, columnspan=3)
+
+flag_player = 1
+
+rows, columns = 6, 7
+for i in range(rows):
+    frame.rowconfigure(index=i, weight=1)
+for j in range(columns):
+    frame.columnconfigure(index=j, weight=1)
+
+matrix_labels = []
+for i in range(6):
+    matrix_labels.append([0] * 7)
+
+for i in range(6):
+    for j in range(7):
+        matrix_labels[i][j] = ctk.CTkLabel(master=frame)
+        matrix_labels[i][j].configure(text="", image=image_WhiteBackground_ctk_utility)
+        if i == 5:
+            matrix_labels[i][j].configure(text="", image=image_GreyBackground_ctk_utility)
+        matrix_labels[i][j].grid(row=i, column=j, padx=1, pady=1)
+
+matrix_flag = []
+for i in range(6):
+    matrix_flag.append([0] * 7)
+
+for i in range(6):
+    for j in range (7):
+        matrix_flag[i][j] = "white"
+        if i == 5:
+            matrix_flag[i][j] = "grey"
+
+matrix_f = []
+for i in range(6):
+    matrix_f.append([0] * 7)
+
+
+for i in range(6):
+    for j in range(7):
+        matrix_f[i][j] = lambda x, i_new=i, j_new=j: move(i_new, j_new, matrix_flag[i_new][j_new])
+
+
+for i in range(6):
+    for j in range(7):
+        matrix_labels[i][j].bind("<Button-1>", matrix_f[i][j])
+
+root.mainloop()
